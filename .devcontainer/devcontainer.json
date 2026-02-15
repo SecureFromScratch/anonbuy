@@ -1,0 +1,42 @@
+{
+  "name": "Node.js & PostgreSQL",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    }
+  },
+
+  "forwardPorts": [3000, 5432],
+  "portsAttributes": {
+    "3000": {
+      "label": "Application",
+      "onAutoForward": "notify"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "ignore"
+    }
+  },
+
+  "postCreateCommand": "npm install && npx prisma generate",
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Prisma.prisma",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+  },
+
+  "remoteUser": "node"
+}

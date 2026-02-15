@@ -1,5 +1,20 @@
 version: "3.9"
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nodeapi-app
+    volumes:
+      - .:/workspace:cached
+    command: sleep infinity
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${PGUSER:-postgres}:${PGPASSWORD:-postgres}@db:5432/${PGDATABASE:-nodeapi}
+      NODE_ENV: development
+
   db:
     image: postgres:16
     container_name: nodeapi-postgres
@@ -17,5 +32,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+
 volumes:
   pgdata:
