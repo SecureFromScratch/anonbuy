@@ -9,7 +9,7 @@ cp .env.codespaces .env
 
 # 2. Wait for database to be healthy
 echo "⏳ Waiting for database..."
-timeout 60 bash -c 'until docker-compose exec -T db pg_isready -U postgres; do sleep 2; done'
+timeout 60 bash -c 'until docker compose exec -T db pg_isready -U postgres; do sleep 2; done'
 
 # 3. Install dependencies
 echo "📦 Installing dependencies..."
