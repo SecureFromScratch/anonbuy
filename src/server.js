@@ -5,6 +5,6 @@ import { PORT, PUBLIC_DIR } from "./config/env.js";
 console.log("Public dir at", PUBLIC_DIR)
 app.use(express.static(PUBLIC_DIR))
 
-app.listen(PORT, () => {
-  console.log(`API on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`API on http://0.0.0.0:${PORT}`);
 });
