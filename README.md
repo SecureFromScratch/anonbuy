@@ -1,14 +1,16 @@
 # Node API + Postgres (Secure Coding Lab)
 
-Secure coding lab: catalog API with Prisma ORM and PostgreSQL. 
+Secure coding lab: catalog API with Prisma ORM and PostgreSQL.
 
 **Two deployment modes:**
+
 - **Local Development:** Postgres in Docker, API on host (fast iteration)
 - **GitHub Codespaces:** Everything containerized (zero local setup)
 
 ---
 
 ## Table of Contents
+
 - [Prerequisites](#prerequisites)
 - [Local Development](#local-development)
 - [GitHub Codespaces](#github-codespaces)
@@ -21,11 +23,13 @@ Secure coding lab: catalog API with Prisma ORM and PostgreSQL.
 ## Prerequisites
 
 **For Local Development:**
+
 - Docker + Docker Compose
 - Node.js **20+** and npm
 - (Optional) `psql` CLI
 
 **For GitHub Codespaces:**
+
 - GitHub account (nothing else needed!)
 
 ---
@@ -33,6 +37,7 @@ Secure coding lab: catalog API with Prisma ORM and PostgreSQL.
 ## Local Development
 
 ### 1) Setup Environment
+
 ```bash
 # Clone repository
 git clone https://github.com/YOUR_USERNAME/nodeapi-app.git
@@ -43,6 +48,7 @@ cp .env.local .env
 ```
 
 **`.env.local` contents:**
+
 ```env
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/nodeapi?schema=public
 PORT=3000
@@ -55,18 +61,21 @@ PGPORT=5432
 
 > ⚠️ **Security Note:** The password shown is **for training/demo purposes only**.
 > In production:
+>
 > - Use **long, randomly generated passwords** (16-20+ characters)
 > - Mix uppercase, lowercase, numbers, and symbols
 > - Store in **secrets vault** (HashiCorp Vault, AWS Secrets Manager, etc.)
 > - Rotate regularly and enforce **least-privilege access**
 
 ### 2) Start PostgreSQL (Docker)
+
 ```bash
 docker compose up -d
 docker compose ps     # wait until db is healthy
 ```
 
 ### 3) Install Dependencies & Prepare Database
+
 ```bash
 npm ci
 npx prisma generate
@@ -75,6 +84,7 @@ npx prisma db seed
 ```
 
 ### 4) Run the API (Host)
+
 ```bash
 # If you have a dev script (nodemon):
 npm run dev
@@ -86,6 +96,7 @@ node src/server.js
 > **Note:** Ensure your server binds externally: `app.listen(PORT, '0.0.0.0')`
 
 ### 5) Quick Test
+
 ```bash
 # Health check
 curl -s http://localhost:3000/health
@@ -98,6 +109,7 @@ curl -s "http://localhost:3000/api/v1/items/search?category=books&active=true" |
 ```
 
 ### Stop Local Development
+
 ```bash
 docker compose down
 ```
@@ -112,20 +124,34 @@ docker compose down
 2. Click **Code** → **Codespaces** → **Create codespace on main**
 3. Wait 2-5 minutes for automatic setup
 4. Once complete, run: `npm start`
-5. Click the popup to open port 3000
+5. **Click the popup** to open port 3000 in your browser
 
-### What Happens Automatically
+### Troubleshooting 502 Errors
 
-The setup script (`.devcontainer/setup.sh`) runs:
+If you get a 502 error when accessing the app in browser:
 
-- ✅ Configures environment (`.env.codespaces` → `.env`)
-- ✅ Waits for PostgreSQL to be healthy
-- ✅ Installs dependencies (`npm ci`)
-- ✅ Generates Prisma client
-- ✅ Applies database migrations
-- ✅ Seeds database (if seed script exists)
+**Option 1: Check Port Visibility**
+
+1. Go to **PORTS** tab (bottom panel)
+2. Find port **3000**
+3. If **Visibility** says "Private", right-click → **Port Visibility** → **Public**
+
+**Option 2: Verify Server Binding**
+
+- The server should start with: `API on http://0.0.0.0:3000`
+- NOT: `API on http://localhost:3000`
+- If you see localhost, the server is not accessible from outside the container
+
+### Access Your Application
+
+1. Go to **PORTS** tab in the bottom panel
+2. Find port **3000**
+3. Click the **globe icon** 🌐 or copy the **Forwarded Address**
+4. Your app URL will be something like:
+   `https://effective-space-enigma-xyz.app.github.dev`
 
 ### Manual Setup (if needed)
+
 ```bash
 # The setup script should run automatically, but if needed:
 bash .devcontainer/setup.sh
@@ -138,12 +164,12 @@ npm start
 
 ## API Endpoints
 
-| Method | Path                   | Purpose            | Notes                                                                                         |
-|-------:|------------------------|--------------------|---------------------------------------------------------------------------------------------|
-|    GET | `/health`              | Liveness probe     | Returns `200 OK`                                                                            |
-|    GET | `/api/v1/items`        | List items         | Returns `200 OK` with items array                                                           |
+| Method | Path                   | Purpose            | Notes                                                                                        |
+| -----: | ---------------------- | ------------------ | -------------------------------------------------------------------------------------------- |
+|    GET | `/health`              | Liveness probe     | Returns `200 OK`                                                                             |
+|    GET | `/api/v1/items`        | List items         | Returns `200 OK` with items array                                                            |
 |   POST | `/api/v1/items`        | Create item        | `201 Created`; `Content-Type: application/json` with `{"name","category","price","active?"}` |
-|    GET | `/api/v1/items/search` | Search by criteria | Query params: `category` (string), `price` (number), `active` (bool)                        |
+|    GET | `/api/v1/items/search` | Search by criteria | Query params: `category` (string), `price` (number), `active` (bool)                         |
 
 ### Tips
 
@@ -158,16 +184,19 @@ npm start
 ### PostgreSQL Commands
 
 **Check connectivity:**
+
 ```bash
 docker exec -it nodeapi-postgres pg_isready -U postgres -d nodeapi
 ```
 
 **Access PostgreSQL prompt:**
+
 ```bash
 psql -h 127.0.0.1 -U postgres -d nodeapi   # password: postgres
 ```
 
 **Inside psql:**
+
 ```sql
 -- List tables
 \dt
@@ -185,6 +214,7 @@ TRUNCATE TABLE "CouponRedemption";
 ### Reset Database to Fresh State
 
 > ⚠️ **Warning:** Destroys all PostgreSQL data
+
 ```bash
 # Stop and remove containers + volumes
 docker compose down -v
@@ -201,6 +231,7 @@ npx prisma db seed
 ```
 
 ### Prisma Commands
+
 ```bash
 # Generate Prisma client
 npx prisma generate
@@ -223,20 +254,22 @@ npx prisma migrate reset      # Drops DB, re-runs migrations, seeds
 
 ## Environment Files
 
-| File                 | Purpose                        | Committed? | Database Host   |
-|---------------------|--------------------------------|------------|-----------------|
-| `.env.local`        | Local development template     | ✅ Yes      | `localhost:5432`|
-| `.env.codespaces`   | Codespaces template           | ✅ Yes      | `db:5432`       |
-| `.env`              | Active configuration          | ❌ No       | Auto-generated  |
-| `.env.example`      | Legacy template (optional)    | ✅ Yes      | `localhost:5432`|
+| File              | Purpose                    | Committed? | Database Host    |
+| ----------------- | -------------------------- | ---------- | ---------------- |
+| `.env.local`      | Local development template | ✅ Yes     | `localhost:5432` |
+| `.env.codespaces` | Codespaces template        | ✅ Yes     | `db:5432`        |
+| `.env`            | Active configuration       | ❌ No      | Auto-generated   |
+| `.env.example`    | Legacy template (optional) | ✅ Yes     | `localhost:5432` |
 
 **Key Difference:** Database host
+
 - **Local:** `@localhost:5432` (app on host, DB in Docker)
 - **Codespaces:** `@db:5432` (both in Docker network)
 
 ---
 
 ## Project Structure
+
 ```
 .devcontainer/
   devcontainer.json        # Codespaces configuration
@@ -268,6 +301,7 @@ README.md
 ## Troubleshooting
 
 ### Port 5432 Already in Use
+
 ```bash
 # Option 1: Stop conflicting service
 docker ps | grep 5432
@@ -280,6 +314,7 @@ docker compose up -d
 ```
 
 ### Prisma Errors
+
 ```bash
 # Regenerate Prisma client
 npx prisma generate
@@ -294,6 +329,7 @@ npx prisma migrate deploy
 ### Database Connection Failed
 
 **Local Development:**
+
 ```bash
 # Check if database is running
 docker compose ps
@@ -307,6 +343,7 @@ cat .env | grep DATABASE_URL
 ```
 
 **Codespaces:**
+
 ```bash
 # Verify .env uses db hostname
 cat .env | grep DATABASE_URL
@@ -317,6 +354,7 @@ docker compose logs db
 ```
 
 ### Uploads Directory Issues
+
 ```bash
 # Create uploads directory manually
 mkdir -p uploads/items
@@ -326,6 +364,7 @@ ls -la uploads/
 ```
 
 ### Clean Start (Nuclear Option)
+
 ```bash
 # Remove everything
 docker compose down -v
@@ -347,6 +386,7 @@ npm start
 ## Best Practices
 
 ✅ **DO:**
+
 - Commit all Prisma migration files
 - Keep seed script idempotent (`upsert`, `skipDuplicates`)
 - Use `.env.example` templates, not actual `.env`
@@ -354,6 +394,7 @@ npm start
 - Use strong passwords in production
 
 ❌ **DON'T:**
+
 - Commit `.env` files with secrets
 - Commit `node_modules/` or `pgdata/`
 - Use demo passwords in production
@@ -362,6 +403,7 @@ npm start
 ---
 
 ## Quick Reference
+
 ```bash
 # Local: Start everything
 cp .env.local .env && docker compose up -d && npm ci && npx prisma migrate deploy && npm start

@@ -14,11 +14,13 @@
   "portsAttributes": {
     "3000": {
       "label": "Application",
-      "onAutoForward": "notify"
+      "onAutoForward": "notify",
+      "visibility": "public"
     },
     "5432": {
       "label": "PostgreSQL",
-      "onAutoForward": "ignore"
+      "onAutoForward": "ignore",
+      "visibility": "private"
     }
   },
 
