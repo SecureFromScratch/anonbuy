@@ -22,7 +22,7 @@
     }
   },
 
-  "postCreateCommand": "npm install && npx prisma generate",
+  "postCreateCommand": "bash .devcontainer/setup.sh",
   
   "customizations": {
     "vscode": {
@@ -32,8 +32,7 @@
         "esbenp.prettier-vscode"
       ],
       "settings": {
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.formatOnSave": true
       }
     }
   },

@@ -1,8 +1,28 @@
-node_modules
-.env
-.DS_Store
-coverage
+# Dependencies
+node_modules/
 
-/src/generated/prisma
-/uploads/
+# Environment
+.env
+.env.local
+
+# Keep templates
+!.env.codespaces
+
+# Logs
+*.log
+npm-debug.log*
+
+# Database
+pgdata/
+
+# Uploads
 uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
