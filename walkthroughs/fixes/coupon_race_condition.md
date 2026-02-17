@@ -80,11 +80,11 @@ The **real fix** is to make the database enforce the rule.
 
 ```prisma
 model CouponRedemption {
-  id        Int  @id @default(autoincrement())
-  userId    Int
-  couponId  Int
-
-  @@unique([userId, couponId]) // one redemption per user per coupon
+  .
+  .
+  .
+  
+  @@unique([orderId, couponId]) // one redemption per order per coupon
 }
 ```
 
@@ -121,24 +121,40 @@ With the constraint in place, the application logic can be simplified.
 ### Fixed Code
 
 ```js
-export async function redeemCouponSafe({ userId, code }) {
-  return prisma.$transaction(async (tx) => {
-    const coupon = await tx.coupon.findFirst({ where: { code, active: true } });
-    if (!coupon) throw new Error("Coupon invalid");
-
-    try {
-      return await tx.couponRedemption.create({
-        data: { userId, couponId: coupon.id }
+export async function redeemCoupon({ walletCode, couponCode }) {
+   return prisma.$transaction(async (tx) => {
+      const coupon = await tx.coupon.findFirst({
+         where: { code: couponCode, active: true }
       });
-    } catch (e) {
-      // P2002 = unique constraint violation
-      if (e.code === "P2002") {
-        throw new Error("Already used");
+      if (!coupon) {
+         throw new BusinessError("Coupon invalid");
       }
-      throw e;
-    }
-  });
+
+      const order = await tx.order.findUnique({ where: { walletCode } });
+      if (!order) {
+         throw new BusinessError("No current order");
+      }
+
+      try {
+         return await tx.couponRedemption.create({
+            data: {
+               couponId: coupon.id,
+               couponCode: coupon.code,
+               orderId: order.id,
+               percent: coupon.percent,
+               walletCode: walletCode
+            }
+         });
+      } catch (e) {
+         // P2002 = unique constraint violation
+         if (e.code === "P2002") {
+            throw new BusinessError("Already used");
+         }
+         throw e;
+      }
+   });
 }
+
 ```
 
 ---
