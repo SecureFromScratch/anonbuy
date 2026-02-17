@@ -11,6 +11,9 @@ model Wallet {
   id      Int     @id @default(autoincrement())
   code    String  @unique
   balance Decimal @default(0) @db.Decimal(8, 2)
+
+  couponRedemptions CouponRedemption[]
+
 }
 
 model Item {
@@ -77,11 +80,13 @@ model CouponRedemption {
   orderId    Int
   couponId   Int
   couponCode String?
+  walletCode String
   redeemedAt DateTime @default(now())
   percent    Int
 
   order  Order  @relation(fields: [orderId], references: [id])
   coupon Coupon @relation(fields: [couponId], references: [id])
+  wallet Wallet @relation(fields: [walletCode], references: [code])
 
   @@index([orderId])
   @@index([orderId, couponId])

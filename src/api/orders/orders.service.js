@@ -83,7 +83,7 @@ export async function redeemCoupon({ walletCode, couponCode }) {
     await new Promise(r => setTimeout(r, 300));
 
     return tx.couponRedemption.create({
-      data: { couponId: coupon.id, couponCode: coupon.code, orderId: order.id, percent: coupon.percent },
+      data: { couponId: coupon.id, couponCode: coupon.code, orderId: order.id, percent: coupon.percent,walletCode: walletCode },
     });
   });
 }
