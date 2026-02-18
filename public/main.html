@@ -1,39 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Items</title>
 
-    <link rel="stylesheet" href="/styles.css" />
-    <link rel="stylesheet" href="/items.css" />
-    <link rel="stylesheet" href="/cart.css" />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Items</title>
 
-    <!-- NEW: theme that matches index.html -->
-    <link rel="stylesheet" href="/items-theme.css" />
-  </head>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/items.css" />
+  <link rel="stylesheet" href="/cart.css" />
+  <link rel="stylesheet" href="/bulk-upload.css" />
 
-  <body class="theme-hero">
-    <main class="wrap items-wrap">
-      <header class="topbar">
-        <!--h1 class="title" s>Catalog</h1-->
-        <div id="controls">
-          <label class="input" title="Search by name or category">
-            <span aria-hidden="true">🔎</span>
-            <input id="q" type="search" placeholder="Search…" autocomplete="off" />
-          </label>
+  <!-- NEW: theme that matches index.html -->
+  <link rel="stylesheet" href="/items-theme.css" />
+</head>
+
+<body class="theme-hero">
+  <main class="wrap items-wrap">
+    <header class="topbar">
+      <!--h1 class="title" s>Catalog</h1-->
+      <div id="controls">
+        <label class="input" title="Search by name or category">
+          <span aria-hidden="true">🔎</span>
+          <input id="q" type="search" placeholder="Search…" autocomplete="off" />
+        </label>
+      </div>
+    </header>
+
+    <section class="glass layout">
+      <section id="items-pane" aria-label="Items">
+        <div id="status" hidden>
+          <span class="spinner" aria-hidden="true"></span><span>Loading…</span>
         </div>
-      </header>
+        <div id="grid" hidden></div>
+        <div id="empty" hidden>No items found.</div>
+      </section>
 
-      <section class="glass layout">
-        <section id="items-pane" aria-label="Items">
-          <div id="status" hidden>
-            <span class="spinner" aria-hidden="true"></span><span>Loading…</span>
-          </div>
-          <div id="grid" hidden></div>
-          <div id="empty" hidden>No items found.</div>
-        </section>
-
+      <div class="right-col">
         <aside id="cart-pane" aria-label="Shopping Cart">
           <h2>Shopping Cart</h2>
           <div id="cart-list" class="cart-list" aria-live="polite"></div>
@@ -49,7 +52,8 @@
             <div class="row">
               <label class="muted" for="coupon-code">Coupon</label>
               <div class="field">
-                <input id="coupon-code" type="text" inputmode="text" maxlength="64" placeholder="Enter code" autocomplete="off">
+                <input id="coupon-code" type="text" inputmode="text" maxlength="64" placeholder="Enter code"
+                  autocomplete="off">
                 <button id="coupon-apply" class="button" type="button">Apply</button>
               </div>
             </div>
@@ -79,7 +83,8 @@
               <h3>Merge Funds From Another Wallet</h3>
               <label>
                 Wallet code
-                <input id="wallet-merge-code" type="text" maxlength="512" placeholder="Enter wallet code" autocomplete="off">
+                <input id="wallet-merge-code" type="text" maxlength="512" placeholder="Enter wallet code"
+                  autocomplete="off">
               </label>
               <div class="actions">
                 <button id="wallet-merge-cancel" class="button" type="button">Cancel</button>
@@ -88,62 +93,122 @@
             </div>
           </dialog>
         </aside>
-      </section>
+        <!-- ── BULK UPLOAD CUBE ── paste this BELOW </aside> (cart-pane) and BEFORE </section> (glass layout) -->
 
-      <!-- templates stay the same -->
-      <template id="item-card">
-        <article class="card item-card" role="article">
-          <figure class="media" data-field="imageWrap" hidden>
-            <img class="thumb" data-field="image" loading="lazy" referrerpolicy="no-referrer" alt="" />
-          </figure>
-          <div class="row">
-            <div class="name" data-field="name"></div>
-            <span class="badge" data-field="category"></span>
+        <aside id="bulk-upload-pane" aria-label="Bulk Upload Products">
+          <div class="bulk-header">
+            <h2>Bulk Upload</h2>
+            <span class="bulk-badge">CSV · JSON</span>
           </div>
-          <div class="row">
-            <div class="muted" data-field="createdAt"></div>
-            <div class="price" data-field="price"></div>
+
+          <input id="bulk-file-input" type="file" accept=".csv,.json,application/json,text/csv" style="display:none"
+            aria-hidden="true" />
+
+          <label id="bulk-dropzone" class="bulk-dropzone" for="bulk-file-input"
+            aria-label="Drop CSV or JSON file here, or click to browse">
+            <div class="bulk-dropzone-inner">
+              <div class="bulk-icon" aria-hidden="true">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+                  <polyline points="16 12 12 8 8 12" />
+                  <line x1="12" y1="8" x2="12" y2="20" />
+                </svg>
+              </div>
+              <p class="bulk-hint">Drop file here or <span class="bulk-link">browse</span></p>
+              <p class="bulk-sub">Accepts .csv or .json — max 5 MB</p>
+            </div>
+          </label>
+
+          <!-- Two sample buttons -->
+          <div class="bulk-samples">
+            <button id="bulk-sample-btn" class="button bulk-sample-btn" type="button">⬇ Sample CSV</button>
+            <button id="bulk-sample-2-btn" class="button bulk-sample-btn sample2" type="button">⬇ Sample 2 CSV</button>
           </div>
-          <div class="qty" data-field="qtyWrap" hidden>
-            <label>
-              <span class="muted">Qty</span>
-              <input type="number" class="qty-input" data-field="qty" min="0" step="1" inputmode="numeric" pattern="[0-9]*" />
-            </label>
-          </div>
-          <details data-field="fileDetails" hidden>
-            <summary class="muted">File</summary>
-            <div class="files">
-              <div><strong>Name:</strong> <span data-field="fileName"></span></div>
-              <div><strong>Size:</strong> <span data-field="fileSize"></span></div>
-              <div><strong>Type:</strong> <span data-field="mimeType"></span></div>
+
+          <details class="bulk-format">
+            <summary>Expected format</summary>
+            <div class="bulk-format-body">
+              <p><strong>CSV</strong> — first row = headers:</p>
+              <code>walletCode,itemId,quantity</code>
+              <p><strong>JSON</strong> — array of objects:</p>
+              <code>[{"walletCode":"abc123","itemId":1,"quantity":2}]</code>
             </div>
           </details>
-        </article>
-      </template>
 
-      <template id="cart-line">
-        <div class="cart-line">
-          <img class="cart-thumb" alt="" />
-          <div class="cart-info">
-            <div class="cart-name"></div>
-            <div class="cart-meta">
-              <span class="cart-qty"></span>
-              <span class="cart-unit"></span>
-              <span class="cart-total"></span>
+          <!-- Shown after a file is picked -->
+          <div id="bulk-ready" class="bulk-ready" hidden>
+            <span id="bulk-file-name" class="bulk-file-name"></span>
+            <div class="bulk-actions">
+              <button id="bulk-clear" class="button" type="button">✕</button>
+              <button id="bulk-upload-btn" class="button primary" type="button">Upload</button>
             </div>
           </div>
-        </div>
-      </template>
 
-      <template id="coupon-pill">
-        <div class="coupon-line">
-          <span class="coupon-code"></span>
-          <span class="coupon-percent"></span>
-          <button class="icon-btn coupon-remove" type="button" aria-label="Remove coupon">✕</button>
-        </div>
-      </template>
-    </main>
+          <div id="bulk-status" class="bulk-status" hidden role="status"></div>
+        </aside>
 
-    <script type="module" src="/client.js" defer></script>
-  </body>
+        <!-- Full-width error list — place OUTSIDE .right-col, after </section> (.glass.layout) -->
+        <div id="bulk-error-list" class="bulk-error-list" hidden></div>
+      </div>
+    </section>
+
+    <!-- templates stay the same -->
+    <template id="item-card">
+      <article class="card item-card" role="article">
+        <figure class="media" data-field="imageWrap" hidden>
+          <img class="thumb" data-field="image" loading="lazy" referrerpolicy="no-referrer" alt="" />
+        </figure>
+        <div class="row">
+          <div class="name" data-field="name"></div>
+          <span class="badge" data-field="category"></span>
+        </div>
+        <div class="row">
+          <div class="muted" data-field="createdAt"></div>
+          <div class="price" data-field="price"></div>
+        </div>
+        <div class="qty" data-field="qtyWrap" hidden>
+          <label>
+            <span class="muted">Qty</span>
+            <input type="number" class="qty-input" data-field="qty" min="0" step="1" inputmode="numeric"
+              pattern="[0-9]*" />
+          </label>
+        </div>
+        <details data-field="fileDetails" hidden>
+          <summary class="muted">File</summary>
+          <div class="files">
+            <div><strong>Name:</strong> <span data-field="fileName"></span></div>
+            <div><strong>Size:</strong> <span data-field="fileSize"></span></div>
+            <div><strong>Type:</strong> <span data-field="mimeType"></span></div>
+          </div>
+        </details>
+      </article>
+    </template>
+
+    <template id="cart-line">
+      <div class="cart-line">
+        <img class="cart-thumb" alt="" />
+        <div class="cart-info">
+          <div class="cart-name"></div>
+          <div class="cart-meta">
+            <span class="cart-qty"></span>
+            <span class="cart-unit"></span>
+            <span class="cart-total"></span>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template id="coupon-pill">
+      <div class="coupon-line">
+        <span class="coupon-code"></span>
+        <span class="coupon-percent"></span>
+        <button class="icon-btn coupon-remove" type="button" aria-label="Remove coupon">✕</button>
+      </div>
+    </template>
+  </main>
+
+  <script type="module" src="/client.js" defer></script>
+  <script type="module" src="/bulk-upload.js" defer></script>
+</body>
+
 </html>

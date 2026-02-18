@@ -1,0 +1,346 @@
+/* ──────────────────────────────────────────────────────────────
+   bulk-upload.css  —  add to items.html alongside items-theme.css
+   ────────────────────────────────────────────────────────────── */
+
+/* Wrap cart + bulk into a shared right column using a flex column */
+#cart-pane,
+#bulk-upload-pane {
+  /* both live inside a new wrapper — see HTML note below */
+}
+
+/*
+ * Wrap #cart-pane and #bulk-upload-pane together in items.html like this:
+ *
+ *   <div class="right-col">
+ *     <aside id="cart-pane" …>…</aside>
+ *     <aside id="bulk-upload-pane" …>…</aside>
+ *   </div>
+ *
+ * Then the .layout grid only needs 2 columns (items-pane + right-col).
+ * The right column stacks its children vertically.
+ */
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-self: start;
+  position: sticky;
+  top: 16px;
+}
+
+/* Override any sticky positioning set on the individual panes */
+#cart-pane {
+  position: static !important;
+}
+
+#bulk-upload-pane {
+  position: static !important;
+}
+
+/* ── Pane shell ─────────────────────────────────────────────── */
+#bulk-upload-pane {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--hero-stroke);
+  border-radius: 14px;
+  padding: 16px;
+  color: var(--hero-fg);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-self: start;
+  position: sticky;
+  top: 16px;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.bulk-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.bulk-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.bulk-badge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 213, 79, 0.15);
+  border: 1px solid rgba(255, 213, 79, 0.4);
+  color: var(--hero-accent);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Drop Zone ──────────────────────────────────────────────── */
+.bulk-dropzone {
+  border: 2px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.14s ease;
+  outline: none;
+  position: relative;
+}
+.bulk-dropzone:hover,
+.bulk-dropzone:focus-visible {
+  border-color: rgba(255, 213, 79, 0.55);
+  background: rgba(255, 213, 79, 0.04);
+  transform: translateY(-1px);
+}
+.bulk-dropzone.drag-over {
+  border-color: var(--hero-accent);
+  background: rgba(255, 213, 79, 0.08);
+  transform: scale(1.01);
+}
+.bulk-dropzone-inner {
+  padding: 28px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.bulk-icon {
+  color: rgba(255, 213, 79, 0.7);
+  transition: color 0.18s ease;
+}
+.bulk-dropzone:hover .bulk-icon,
+.bulk-dropzone.drag-over .bulk-icon {
+  color: var(--hero-accent);
+}
+.bulk-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--hero-muted);
+}
+.bulk-link {
+  color: var(--hero-accent);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+.bulk-sub {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+/* ── Format details ─────────────────────────────────────────── */
+.bulk-format {
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  padding-top: 10px;
+}
+.bulk-format summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--hero-muted);
+  list-style: none;
+  user-select: none;
+}
+.bulk-format summary::-webkit-details-marker { display: none; }
+.bulk-format summary::before {
+  content: '▶ ';
+  font-size: 9px;
+  transition: transform 0.15s;
+}
+details[open] .bulk-format summary::before { content: '▼ '; }
+.bulk-format-body {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--hero-muted);
+}
+.bulk-format-body code {
+  display: block;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: rgba(255, 213, 79, 0.85);
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+.bulk-format-body p { margin: 4px 0 2px; }
+
+/* ── Preview table ──────────────────────────────────────────── */
+.bulk-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bulk-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.bulk-row-count {
+  font-size: 12px;
+  color: var(--hero-muted);
+}
+.bulk-table-wrap {
+  max-height: 240px;
+  overflow: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.3);
+  /* Thin gold scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 213, 79, 0.3) transparent;
+}
+.bulk-table-wrap::-webkit-scrollbar { width: 5px; height: 5px; }
+.bulk-table-wrap::-webkit-scrollbar-thumb { background: rgba(255, 213, 79, 0.3); border-radius: 99px; }
+
+.bulk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.bulk-table thead tr {
+  position: sticky;
+  top: 0;
+  background: rgba(0, 0, 0, 0.7);
+}
+.bulk-table th {
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--hero-accent);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+.bulk-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--hero-muted);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bulk-table tr:hover td {
+  background: rgba(255, 255, 255, 0.04);
+}
+.bulk-table tr.has-error td {
+  background: rgba(220, 38, 38, 0.08);
+}
+
+/* ── Error list ─────────────────────────────────────────────── */
+.bulk-error-list {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #fca5a5;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+/* ── Actions ────────────────────────────────────────────────── */
+.bulk-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Status bar ─────────────────────────────────────────────── */
+.bulk-status {
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid transparent;
+}
+.bulk-status.success {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #6ee7b7;
+}
+.bulk-status.error {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #fca5a5;
+}
+.bulk-status.loading {
+  background: rgba(255, 213, 79, 0.07);
+  border-color: rgba(255, 213, 79, 0.25);
+  color: var(--hero-accent);
+}
+
+/* ── Full-width error list below the layout ─────────────────── */
+#bulk-error-list {
+  width: min(1200px, 100%);
+  margin-top: 12px;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #fca5a5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(220, 38, 38, 0.3) transparent;
+}
+
+/* ── Ready row (file name + upload button) ──────────────────── */
+.bulk-ready {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0 0;
+  border-top: 1px dashed rgba(255,255,255,0.12);
+}
+.bulk-file-name {
+  font-size: 12px;
+  color: var(--hero-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* ── Sample CSV button ───────────────────────────────────────── */
+.bulk-sample-btn {
+  width: 100%;
+  font-size: 12px;
+  padding: 6px;
+  text-align: center;
+  opacity: 0.75;
+}
+.bulk-sample-btn:hover { opacity: 1; }
+
+/* ── Two sample buttons row ─────────────────────────────────── */
+.bulk-samples {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.bulk-sample-btn.sample2 {
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+  visibility: hidden;
+  
+}
+.bulk-sample-btn.sample2:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.7);
+  
+}
