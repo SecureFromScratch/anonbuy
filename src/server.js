@@ -4,6 +4,7 @@ import { PORT, PUBLIC_DIR } from "./config/env.js";
 
 console.log("Public dir at", PUBLIC_DIR)
 app.use(express.static(PUBLIC_DIR))
+app.use('/uploads', express.static('uploads'));
 
 // Bind to 0.0.0.0 for Codespaces compatibility
 const HOST = process.env.HOST || '0.0.0.0';

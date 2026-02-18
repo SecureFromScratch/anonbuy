@@ -13,6 +13,30 @@ Can you **achieve more than a 10% discount**?
 
 [Walk Through](../walkthroughs/hacks/race_condition.md) 
 
+## Compromise the Admin
+
+The developers noticed suspicious activity and started monitoring orders more closely. 
+
+You notice the bulk endpoint accepts a file with items.
+Can you exploit this feature to **steal the admin's credentials** when they review uploaded files?
+
+
+<details>
+<summary>Hints:</summary>
+
+<br>
+
+- What file types are actually being accepted?
+
+- Where are uploaded files stored?
+
+- Can you make the admin visit a URL under your control?
+
+- Remember: the same-origin policy matters
+
+</details>
+
+[Walk Through](../walkthroughs/hacks/file_upload.md)
 
 ## Control the Price
 

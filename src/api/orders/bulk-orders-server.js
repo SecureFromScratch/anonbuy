@@ -6,18 +6,15 @@
 import multer    from 'multer';
 import { parse } from 'csv-parse/sync';
 
-// ── Multer ─────────────────────────────────────────────────────
-export const upload = multer({
-  storage: multer.memoryStorage(),
-  limits:  { fileSize: 5 * 1024 * 1024 },
+const storage = multer.diskStorage({
+  destination: './uploads',
+  filename: (req, file, cb) => {    
+    cb(null, file.originalname);
+  }
+});
 
-  // ❌ VULNERABLE — comment out to demo file upload vuln
-  // ✅ SAFE       — whitelist by extension
-  fileFilter: (req, file, cb) => {
-    const ext = file.originalname.slice(file.originalname.lastIndexOf('.')).toLowerCase();
-    if (ext === '.csv') cb(null, true);
-    else cb(new Error(`Rejected: ${file.originalname}`), false);
-  },
+export const upload = multer({
+      storage  
 });
 
 // ── CSV parser ─────────────────────────────────────────────────
