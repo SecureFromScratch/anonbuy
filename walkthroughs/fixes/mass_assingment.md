@@ -1,12 +1,4 @@
-# Mass Assignment Vulnerability Lab
-
-## Introduction
-
-This lab demonstrates a **mass assignment vulnerability** in a bulk order upload feature. You'll exploit it to get free items, then fix it properly.
-
----
-
-## Part 1: Understanding the Vulnerability
+## Mass Assignment
 
 ### What is Mass Assignment?
 
@@ -35,67 +27,11 @@ orderMap.get(walletCode).push(line);
 3. Server calculates: `unitPrice` (from DB) and `totalPrice = unitPrice × quantity`
 4. Server stores the order with the **computed** prices
 
-### The Exploit
-
-If we add `unitPrice` and `totalPrice` columns to the CSV with value `0`, the vulnerable code accepts them and they **overwrite** the computed prices in the database.
-
 ---
 
-## Part 2: Exploit the Vulnerability
+### Fix the Vulnerability
 
-### Step 1: Download the Exploit CSV
-
-Click the **⬇ Exploit CSV** button in the Bulk Upload panel. Open it in a text editor:
-
-```csv
-walletCode,itemId,quantity,unitPrice,totalPrice
-demo,1,1,0,0
-demo,3,1,0,0
-demo,2,5,0,0
-```
-
-Notice the extra columns: `unitPrice,totalPrice` — both set to `0`.
-
-### Step 2: Upload the File
-
-1. Upload the exploit CSV using the bulk upload interface
-2. Check your shopping cart
-3. **Result:** All items show `@ $0.00` — total is $0.00
-
-You just got $165 worth of items for free by adding two columns to a CSV file.
-
----
-
-## Part 3: Why It Works
-
-Follow the data flow:
-
-1. **CSV parsed:** `{ walletCode: "demo", itemId: 1, quantity: 1, unitPrice: 0, totalPrice: 0 }`
-2. **Controller loops through ALL keys:**
-   ```js
-   line[key] = Number(value);
-   // Results in: { itemId: 1, quantity: 1, unitPrice: 0, totalPrice: 0 }
-   ```
-3. **Sent to service:** `setOrder({ lines: [{ itemId: 1, quantity: 1, unitPrice: 0, totalPrice: 0 }], ... })`
-4. **Service computes prices:**
-   ```js
-   const unitPrice = priceById.get(line.itemId);   // = 15 from database
-   const totalPrice = unitPrice * line.quantity;   // = 15
-   return {
-     unitPrice,      // = 15  ← set first
-     totalPrice,     // = 15
-     ...line,        // ← spreads { itemId: 1, quantity: 1, unitPrice: 0, totalPrice: 0 }
-   };
-   // Final object: { unitPrice: 0, totalPrice: 0, itemId: 1, quantity: 1 }
-   ```
-
-The spread operator `...line` comes AFTER the computed values, so the attacker's `0` overwrites the real price.
-
----
-
-## Part 4: Fix the Vulnerability
-
-### The Wrong Fix ❌
+#### The Wrong Fix ❌
 
 **Don't do this:**
 ```js
@@ -107,7 +43,7 @@ Why? Attackers can bypass with encoding tricks, typos the service tolerates, or 
 
 ---
 
-### The Right Fix ✅ — Enable Schema Validation
+#### The Right Fix ✅ — Enable Schema Validation
 
 Your codebase already has Zod schemas in `validateOrder.js`, but `.strict()` is commented out.
 
