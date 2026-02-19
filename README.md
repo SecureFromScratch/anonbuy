@@ -27,14 +27,10 @@ All hands-on exercises live under:
 
 Authoritative solutions are provided under:
 
-```
-docs/walkthroughs/
-├── hacks/
-│   ├── *.md    # Step-by-step exploitation walkthroughs
-│
-├── fixes/
-│   ├── *.md    # Secure implementation explanations
-```
+[docs/walkthroughs/hacks](docs/walkthroughs/hacks)  
+
+[docs/walkthroughs/fixes](docs/walkthroughs/fixes)    
+
 
 * These folders contain **answers**
 * Not meant to be read before attempting the challenge
