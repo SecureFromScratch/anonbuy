@@ -6,6 +6,8 @@ This repository is designed for **hands-on secure coding exercises**, not as a p
 
 ---
 
+![The Client GUI](docs/images/lab.png)
+
 ## Lab Structure Overview
 
 ### Challenges
