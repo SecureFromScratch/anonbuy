@@ -1,4 +1,4 @@
-# Welcome to **anonbuy**
+# Welcome to **ANONBUY**
 
 Secure coding lab: **catalog API** built with **Node.js**, **Prisma ORM**, and **PostgreSQL**.
 
