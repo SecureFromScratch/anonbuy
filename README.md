@@ -15,7 +15,9 @@ All hands-on exercises live under:
 
 
 docs/challenges/
+
 ├── [1_Hack.md](/docs/challenges/1_Hack.md)    # Vulnerable challenge descriptions│   
+
 ├── [2_Fix.md](/docs/challenges/2_Fix.md)     # Secure coding tasks (what to fix)
 
 
