@@ -5,6 +5,7 @@ Secure coding lab: **catalog API** built with **Node.js**, **Prisma ORM**, and *
 This repository is designed for **hands-on secure coding exercises**, not as a production system.
 
 ---
+<img src="docs/images/lab.png" width="300" />
 
 ![The Client GUI](docs/images/lab.png)
 
