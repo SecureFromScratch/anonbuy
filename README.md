@@ -18,13 +18,9 @@ All hands-on exercises live under:
 [docs/challenges/2_Fix.md](/docs/challenges/2_Fix.md)     # Secure coding tasks (what to fix)
 
 
-
 * Each challenge has:
-
   * a **Hack** version (exploit the vulnerability)
   * a **Fix** version (secure the code)
-* Students should start **only** from `hack/`
-
 ---
 
 ### Walkthroughs (Solutions)
