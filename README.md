@@ -13,12 +13,12 @@ This repository is designed for **hands-on secure coding exercises**, not as a p
 
 All hands-on exercises live under:
 
-```
+
 docs/challenges/
 ├── [1_Hack.md](/docs/challenges/1_Hack.md)    # Vulnerable challenge descriptions│   
-├── 2_Fix.md     # Secure coding tasks (what to fix)
+├── [2_Fix.md](/docs/challenges/2_Fix.md)     # Secure coding tasks (what to fix)
 
-```
+
 
 * Each challenge has:
 
