@@ -52,10 +52,10 @@ Authoritative solutions are provided under:
 This lab supports two execution modes:
 
 * **Local Development**
-  See: `README.local.md`
+  See: [README.local.md](README.local.md)
 
 * **GitHub Codespaces**
-  See: `README.codespaces.md`
+  See: [README.codespaces.md](README.codespaces.md)
 
 ---
 
