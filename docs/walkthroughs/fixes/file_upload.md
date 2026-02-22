@@ -1,4 +1,4 @@
-# Secure File Upload 
+## Secure File Upload 
 
 The bulk upload feature has multiple security issues that allow attackers to upload and serve malicious HTML/JavaScript files, leading to credential theft and XSS attacks.
 
@@ -10,7 +10,7 @@ The bulk upload feature has multiple security issues that allow attackers to upl
 
 ---
 
-## Understanding the Attack
+### Understanding the Attack
 
 Before fixing, understand what the attacker did:
 
@@ -24,9 +24,9 @@ Before fixing, understand what the attacker did:
 
 ---
 
-## Fix #1: Validate File Types (Essential)
+### Fix #1: Validate File Types (Essential)
 
-### The Problem
+#### The Problem
 
 Current code accepts ANY file type:
 

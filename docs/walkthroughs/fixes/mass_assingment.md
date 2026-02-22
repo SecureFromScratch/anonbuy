@@ -1,10 +1,8 @@
 ## Mass Assignment
 
-### What is Mass Assignment?
-
 When a web application takes user input and directly maps it to database fields without validating which fields are allowed, attackers can modify fields they shouldn't have access to.
 
-### The Vulnerable Code
+## The Vulnerable Code
 
 Look at `orders.controller.js` in the `bulkOrders` function:
 
@@ -18,58 +16,53 @@ for (const [key, value] of Object.entries(row)) {
 orderMap.get(walletCode).push(line);
 ```
 
-**The Problem:** This code takes EVERY column from the CSV and puts it into the `line` object. If the CSV has a column called `unitPrice` or `totalPrice`, those values go straight into the database.
+**The Problem:** This code takes every column from the CSV and puts it directly into the `line` object — without any schema validation. The resulting object is passed straight to `setOrder()`, which does this:
+
+```js
+return {
+  unitPrice,
+  totalPrice,
+  ...line,   // ← attacker-controlled fields overwrite computed prices
+  itemId: line.itemId,
+  quantity: line.quantity,
+};
+```
+
+If the CSV contains a `unitPrice` or `totalPrice` column, those values override the server-computed prices via the spread.
 
 ### How Orders Are Supposed to Work
 
 1. User submits: `itemId` and `quantity`
-2. Server fetches item price from database
+2. Server fetches item price from the database
 3. Server calculates: `unitPrice` (from DB) and `totalPrice = unitPrice × quantity`
 4. Server stores the order with the **computed** prices
 
 ---
 
-### Fix the Vulnerability
+## Is the Regular `/order/change` Endpoint Also Vulnerable?
 
-#### The Wrong Fix ❌
+**No.** The regular endpoint passes input through the Zod schema before calling `setOrder()`. By default, Zod's `.strip()` behavior silently removes any unrecognized fields (like `unitPrice` or `totalPrice`) from the parsed output. So even without `.strict()`, those fields never reach `setOrder()`.
 
-**Don't do this:**
+The bulk CSV endpoint is vulnerable precisely because it **bypasses the schema entirely** — rows go straight to `setOrder()` with no Zod parsing at all.
+
+---
+
+## Fix the Vulnerability
+
+### The Wrong Fix ❌
+
 ```js
 // Blacklist approach - fragile and easy to bypass
 if (key === 'unitPrice' || key === 'totalPrice') continue;
 ```
 
-Why? Attackers can bypass with encoding tricks, typos the service tolerates, or future fields you forget to block.
+Why? You might forget other sensitive fields (`status`, `createdAt`, `id`), and future fields you add won't be protected automatically.
 
 ---
 
-#### The Right Fix ✅ — Enable Schema Validation
+### The Right Fix ✅ — Validate CSV Rows Against the Schema
 
-Your codebase already has Zod schemas in `validateOrder.js`, but `.strict()` is commented out.
-
-#### Step 1: Enable `.strict()` on the Schema
-
-In `validateOrder.js`, uncomment `.strict()`:
-
-```js
-export const OrderLineSchema = z.object({
-  itemId:   z.coerce.number().int().positive(),
-  quantity: z.coerce.number().int().min(1).max(100),
-}).strict();  // ← UNCOMMENT THIS
-
-export const OrderSchema = z.object({
-  lines:      z.array(OrderLineSchema).min(0),
-  walletCode: z.string().trim().min(1).max(256)
-}).strict();  // ← UNCOMMENT THIS
-```
-
-**What `.strict()` does:**
-- Without it: `{ itemId: 1, quantity: 2, unitPrice: 0 }` → passes, extra fields survive
-- With it: `{ itemId: 1, quantity: 2, unitPrice: 0 }` → **throws error: "Unrecognized keys: unitPrice"**
-
-#### Step 2: Validate CSV Rows Against the Schema
-
-Update `orders.controller.js` in the `bulkOrders` function:
+The codebase already has Zod schemas in `validateOrder.js`. The bulk endpoint just needs to use them. Update `orders.controller.js`:
 
 ```js
 import { OrderLineSchema } from './validateOrder.js';
@@ -86,32 +79,30 @@ export async function bulkOrders(req, res) {
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    
+
     try {
-      // ✅ Validate each row against OrderLineSchema
-      // This rejects unitPrice, totalPrice, status, etc.
+      // ✅ Only pass the two expected fields into the schema.
+      // Extra CSV columns never touch the parser, so they can't reach setOrder().
       const validated = OrderLineSchema.parse({
         itemId:   row.itemId,
         quantity: row.quantity,
-        // Only pass these two fields to the schema
-        // If CSV has extra columns, they never reach the parser
       });
-      
+
       const walletCode = row.walletCode?.trim();
       if (!walletCode) throw new Error('Missing walletCode');
-      
+
       if (!orderMap.has(walletCode)) orderMap.set(walletCode, []);
       orderMap.get(walletCode).push(validated);
-      
+
     } catch (err) {
       validationErrors.push(`Row ${i + 1}: ${err.message}`);
     }
   }
 
   if (validationErrors.length > 0) {
-    return res.status(400).json({ 
-      error: 'CSV validation failed', 
-      details: validationErrors 
+    return res.status(400).json({
+      error: 'CSV validation failed',
+      details: validationErrors
     });
   }
 
@@ -132,96 +123,35 @@ export async function bulkOrders(req, res) {
 }
 ```
 
+**Why this works:** By explicitly constructing `{ itemId: row.itemId, quantity: row.quantity }` before passing to the schema, extra CSV columns are never included. Even if the schema didn't strip them, they never get the chance to appear in `validated`.
+
+### Optional Improvement: Enable `.strict()` on the Schema
+
+While not required to fix the vulnerability, enabling `.strict()` in `validateOrder.js` is good practice:
+
+```js
+export const OrderLineSchema = z.object({
+  itemId:   z.coerce.number().int().positive(),
+  quantity: z.coerce.number().int().min(1).max(100),
+}).strict();
+```
+
+Without `.strict()`, Zod silently strips unrecognized fields. With it, passing unexpected fields throws an explicit error. This makes schema violations visible and easier to debug — but the core protection above doesn't depend on it.
+
 ### Why This Approach is Best
 
-1. **Reuses existing schemas:** Same validation as your `/order/change` endpoint
-2. **Declarative validation:** The schema says "these are the ONLY valid fields"
-3. **Type coercion:** `z.coerce.number()` handles string→number conversion safely
+1. **Reuses existing schemas:** Same validation logic as the `/order/change` endpoint
+2. **Whitelist by design:** Only `itemId` and `quantity` are ever passed to the parser
+3. **Type coercion:** `z.coerce.number()` handles string-to-number conversion safely
 4. **Consistent errors:** Same error format across all endpoints
 5. **Future-proof:** Schema changes automatically apply to both single and bulk uploads
 
-### Test the Fix
-
-1. Uncomment `.strict()` in `validateOrder.js`
-2. Update the controller code above
-3. Upload the exploit CSV
-4. **Result:** `400 Bad Request` — validation errors show which rows/fields failed
-
-The `unitPrice` and `totalPrice` columns never make it past the schema validation.
-
 ---
 
+## Test the Fix
 
-### Why Was `.strict()` Commented Out?
-In our case, for the purpose of learning this vulnerability.
-Common reasons developers disable it:
-- **"It's too strict"** — they want flexibility during development
-- **"Legacy data has extra fields"** — old API clients send fields no longer used
-- **"Frontend sends computed values"** — client sends both input and derived data
-
-**The problem:** Every one of these reasons creates a mass assignment vulnerability. The fix is not to disable `.strict()`, it's to:
-- Use proper API versioning for legacy clients
-- Clean up the frontend to only send required fields
-- Validate strictly in production, relax in dev if needed
+1. Update the controller as shown above
+2. Upload the exploit CSV (with `unitPrice` or `totalPrice` columns)
+3. **Result:** The extra columns are ignored; prices are computed server-side as intended
 
 ---
-
-## Part 5: Additional File Upload Vulnerability (Bonus)
-
-### The Problem
-
-Look at `bulk-orders-server.js`:
-
-```js
-export const upload = multer({
-  storage: multer.memoryStorage(),
-  limits:  { fileSize: 5 * 1024 * 1024 },
-  
-  // fileFilter is commented out - accepts ANY file type!
-});
-```
-
-Without a `fileFilter`, an attacker can:
-- Upload `malware.exe` renamed to `orders.csv`
-- Upload `shell.php` disguised as a CSV
-- Upload a 5 MB zip bomb
-
-### The Fix
-
-Uncomment the `fileFilter` in `bulk-orders-server.js`:
-
-```js
-fileFilter: (req, file, cb) => {
-  const ext = file.originalname.slice(file.originalname.lastIndexOf('.')).toLowerCase();
-  if (ext === '.csv') cb(null, true);
-  else cb(new Error(`Rejected: ${file.originalname}`), false);
-}
-```
-
-Now only `.csv` files are accepted.
-
----
-
-## Key Takeaways
-
-1. **Never trust user input** — not even column names in a CSV
-2. **Whitelist, don't blacklist** — explicitly name the fields you accept
-3. **Server-side validation is mandatory** — client-side checks can be bypassed
-4. **Validate file types** — check extension AND MIME type
-5. **Principle of least privilege** — users should only control the minimum fields necessary
-
----
-
-## Reflection Questions
-
-1. What other fields might be exploitable in your app? (Hint: `status`, `createdAt`, `id`?)
-2. How would you exploit this if the service used `{ ...line, unitPrice, totalPrice }` (computed values last)?
-3. Why is `.strict()` on Zod schemas important? (See `validateOrder.js`)
-4. Could an attacker exploit this via the normal `/order/change` endpoint? Why or why not?
-
----
-
-## Additional Resources
-
-- [OWASP: Mass Assignment](https://owasp.org/API-Security/editions/2023/en/0xa6-unrestricted-access-to-sensitive-business-flows/)
-- [CWE-915: Improperly Controlled Modification of Dynamically-Determined Object Attributes](https://cwe.mitre.org/data/definitions/915.html)
