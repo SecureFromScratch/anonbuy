@@ -1,4 +1,4 @@
-## Race Condition
+## Coupon Race Condition
 
 ### Coupon Exploit
 

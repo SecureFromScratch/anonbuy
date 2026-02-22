@@ -13,6 +13,18 @@ Can you **achieve more than a 10% discount**?
 
 [Walk Through](../walkthroughs/hacks/race_condition.md) 
 
+### Bottomless Pit
+
+You have **two wallets**: `demo1` with **$100** and `demo`.
+
+There is an endpoint that transfers **all funds** from `demo1` to `demo`.
+
+Can you make `demo` end up with **more than $100**?
+
+[Walk Through](../walkthroughs/hacks/race_condition.md)
+
+
+
 ## Compromise the Admin
 
 The developers noticed suspicious activity and started monitoring orders more closely. 
