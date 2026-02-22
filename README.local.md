@@ -13,8 +13,8 @@ Fast local iteration with API on host and Postgres in Docker.
 ### Initial Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/nodeapi-app.git
-cd nodeapi-app
+git clone https://github.com/SecureFromScratch/anonbuy.git
+cd anonbuy
 cp .env.local .env
 ```
 
