@@ -31,14 +31,15 @@ Before fixing, understand what the attacker did:
 Current code accepts ANY file type:
 
 ```js
-// ❌ VULNERABLE - no fileFilter
+const storage = multer.diskStorage({
+  destination: './uploads',
+  filename: (req, file, cb) => {    
+    cb(null, file.originalname);
+  }
+});
+
 export const upload = multer({
-  storage: multer.diskStorage({
-    destination: './uploads',
-    filename: (req, file, cb) => cb(null, file.originalname)
-  }),
-  limits: { fileSize: 5 * 1024 * 1024 }
-  // No fileFilter!
+      storage  
 });
 ```
 
