@@ -49,7 +49,7 @@ API must bind to `0.0.0.0`.
 curl http://127.0.0.1:3000/health
 ```
 
-### Verify with browser:
+### Browse:
 Open [http://127.0.0.1:3000/](http://127.0.0.1:3000/)
 enter Wallet code "demo" and click "connect"
 
