@@ -1,12 +1,11 @@
-# Welcome to **anonbuy**
+# Welcome to **ANONBUY**
 
 Secure coding lab: **catalog API** built with **Node.js**, **Prisma ORM**, and **PostgreSQL**.
 
 This repository is designed for **hands-on secure coding exercises**, not as a production system.
 
 ---
-
-![The Client GUI](docs/images/lab.png)
+<img src="docs/images/lab.png" width="400" />
 
 ## Lab Structure Overview
 
@@ -14,33 +13,24 @@ This repository is designed for **hands-on secure coding exercises**, not as a p
 
 All hands-on exercises live under:
 
-```
-docs/challenges/
-├── 1_Hack.md    # Vulnerable challenge descriptions│   
-├── 2_Fix.md     # Secure coding tasks (what to fix)
+[docs/challenges/1_Hack.md](/docs/challenges/1_Hack.md)  
 
-```
+[docs/challenges/2_Fix.md](/docs/challenges/2_Fix.md)    
+
 
 * Each challenge has:
-
   * a **Hack** version (exploit the vulnerability)
   * a **Fix** version (secure the code)
-* Students should start **only** from `hack/`
-
 ---
 
 ### Walkthroughs (Solutions)
 
 Authoritative solutions are provided under:
 
-```
-docs/walkthroughs/
-├── hacks/
-│   ├── *.md    # Step-by-step exploitation walkthroughs
-│
-├── fixes/
-│   ├── *.md    # Secure implementation explanations
-```
+[docs/walkthroughs/hacks](docs/walkthroughs/hacks)  
+
+[docs/walkthroughs/fixes](docs/walkthroughs/fixes)    
+
 
 * These folders contain **answers**
 * Not meant to be read before attempting the challenge
@@ -62,10 +52,10 @@ docs/walkthroughs/
 This lab supports two execution modes:
 
 * **Local Development**
-  See: `README.local.md`
+  See: [README.local.md](README.local.md)
 
 * **GitHub Codespaces**
-  See: `README.codespaces.md`
+  See: [README.codespaces.md](README.codespaces.md)
 
 ---
 
