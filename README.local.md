@@ -50,7 +50,7 @@ curl http://127.0.0.1:3000/health
 ```
 
 ### Verify with browser:
-open [http://127.0.0.1:3000/](http://127.0.0.1:3000/)
+Open [http://127.0.0.1:3000/](http://127.0.0.1:3000/)
 enter Wallet code "demo" and click "connect"
 
 ### Stop
