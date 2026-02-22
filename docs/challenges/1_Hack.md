@@ -11,7 +11,7 @@ To use it, enter `SAVE10` in the coupon field and apply the coupon.
 But wait…
 Can you **achieve more than a 10% discount**?
 
-[Walk Through](../walkthroughs/hacks/race_condition.md) 
+[Walk Through](../walkthroughs/hacks/coupon_race_condition.md) 
 
 ### Bottomless Pit
 
@@ -21,7 +21,7 @@ There is an endpoint that transfers **all funds** from `demo1` to `demo`.
 
 Can you make `demo` end up with **more than $100**?
 
-[Walk Through](../walkthroughs/hacks/race_condition.md)
+[Walk Through](../walkthroughs/hacks/wallet_race_condition.md)
 
 
 
