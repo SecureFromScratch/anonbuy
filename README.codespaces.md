@@ -54,13 +54,15 @@ Pay attention: you get a unique address from GitHub Codespaces that includes the
 
 ```bash
 psql -h db -U postgres -d nodeapi
-
-### Manual Recovery (if setup fails)
-
+```
 #### Using Prisma studio
 ```
 npx prisma studio
 ```
+
+
+### Manual Recovery (if setup fails)
+
 
 ```bash
 bash .devcontainer/setup.sh
