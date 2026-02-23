@@ -19,7 +19,7 @@ Under concurrency, this logic breaks.
 ### Vulnerable Code
 
 ```js
-src/api/orders/orders.service.js
+//src/api/orders/orders.service.js
 export async function redeemCoupon({ userId, code }) {
   return prisma.$transaction(async (tx) => {
     const coupon = await tx.coupon.findFirst({ where: { code, active: true } });
