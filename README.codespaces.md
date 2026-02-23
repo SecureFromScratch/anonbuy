@@ -48,7 +48,19 @@ Pay attention: you get a unique address from GitHub Codespaces that includes the
 * Database host is `db:5432`
 * App and DB run in the same Docker network
 
+### Database Operations
+
+#### Connect
+
+```bash
+psql -h db -U postgres -d nodeapi
+
 ### Manual Recovery (if setup fails)
+
+#### Using Prisma studio
+```
+npx prisma studio
+```
 
 ```bash
 bash .devcontainer/setup.sh
