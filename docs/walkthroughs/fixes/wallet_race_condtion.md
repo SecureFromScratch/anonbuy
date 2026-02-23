@@ -6,10 +6,29 @@ There are **3 layers of defense**, applied together for full protection.
 
 Add a constraint so the database physically rejects negative balances, regardless of application logic:
 
-```sql
-ALTER TABLE "Wallet" ADD CONSTRAINT balance_non_negative CHECK (balance >= 0);
+1. Create a migration (without relying on schema changes):
+
+``` bash
+npx prisma migrate dev --name add-wallet-balance-check --create-only`
 ```
 
+2. Open the generated migration file:
+
+   * `prisma/migrations/<timestamp>_add-wallet-balance-check/migration.sql`
+
+3. Add this SQL to it:
+
+```sql
+ALTER TABLE "Wallet"
+ADD CONSTRAINT balance_non_negative
+CHECK (balance >= 0);
+```
+
+4. Apply the migration:
+
+``` bash
+npx prisma migrate dev`
+```
 This is your safety net. Even if all other checks fail, the DB will throw an error and the transaction rolls back. But it's not enough alone — you still want to prevent the race at the application level.
 
 ## Layer 2 — SELECT FOR UPDATE (Row-Level Lock)
