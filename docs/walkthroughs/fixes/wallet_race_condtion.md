@@ -36,6 +36,8 @@ This is your safety net. Even if all other checks fail, the DB will throw an err
 Lock the sender's row the moment you read it, forcing concurrent transactions to queue up:
 
 ```javascript
+// src/api/wallet/wallet.service.js
+
 export async function transferAll({ from, to }) {
    return prisma.$transaction(async (tx) => {
       // Any concurrent transaction hitting this row will BLOCK here
