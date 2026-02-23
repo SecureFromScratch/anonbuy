@@ -25,7 +25,10 @@ Run the entire lab **without any local dependencies**.
 
 * Open **PORTS** tab
 * Ensure port **3000** is **Public**
-* Click the 🌐 icon
+* Click the 🌐 icon to open the app in the browser
+* Enter Wallet code "demo" and click "connect"
+
+Pay attention: you get a unique address from GitHub Codespaces that includes the port.
 
 ### Common Issue: 502 Error
 
