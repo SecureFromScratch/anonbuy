@@ -121,6 +121,7 @@ With the constraint in place, the application logic can be simplified.
 ### Fixed Code
 
 ```js
+// src/api/orders/orders.service.js
 export async function redeemCoupon({ walletCode, couponCode }) {
    return prisma.$transaction(async (tx) => {
       const coupon = await tx.coupon.findFirst({
