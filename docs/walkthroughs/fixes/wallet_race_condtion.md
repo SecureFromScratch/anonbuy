@@ -90,6 +90,7 @@ npm install express-rate-limit
 ```
 
 ```javascript
+// src/api/wallet/wallet.routes.js
 import rateLimit from "express-rate-limit";
 
 const transferLimiter = rateLimit({
