@@ -31,6 +31,7 @@ Before fixing, understand what the attacker did:
 Current code accepts ANY file type:
 
 ```js
+// src/api/orders/bulk-orders-server.js
 const storage = multer.diskStorage({
   destination: './uploads',
   filename: (req, file, cb) => {    
@@ -48,6 +49,7 @@ export const upload = multer({
 **Add strict file type validation with magic bytes:**
 
 ```js
+// src/api/orders/bulk-orders-server.js
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
