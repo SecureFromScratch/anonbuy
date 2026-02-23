@@ -20,12 +20,14 @@ export async function transferAll({ from, to }) {
       }
 
       const result = await prisma.wallet.update({
-         where: { code: to }, 
+         where: { code: to },
          data: { balance: { increment: transferAmount } },
       });
 
-      //=============================================
-      // TODO: There's something missing here!
+      await tx.wallet.update({
+         where: { code: from },
+         data: { balance: { decrement: transferAmount } },
+      });
 
       return result;
    });
