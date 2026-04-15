@@ -8,7 +8,7 @@ A `/wallet/transfer` endpoint that reads a balance and then writes it in two sep
 printf '%s\n' {1..10} | xargs -n1 -P10 -I{} \
 curl -sS -o /dev/null -w "%{http_code}\n" "http://127.0.0.1:3000/api/v1/wallet/withdraw" -X POST \
 -H "Accept: application/json" -H "content-type: application/json" \
---data-raw '{"from":"demo1","to":"demo"}'
+--data-raw '{"from":"demo2","to":"demo"}'
 ```
 
 **Breaking down the flags:**
