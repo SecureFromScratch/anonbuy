@@ -1,6 +1,7 @@
 import * as svc from "./orders.service.js";
 import { BusinessError } from "../../prisma.js";
 import { parseCSV } from './bulk-orders-server.js';
+import fs from 'fs';
 
 export async function currentOrder(req, res) {
   const { walletCode } = req.params;
@@ -65,7 +66,7 @@ export async function bulkOrders(req, res) {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
   let rows;
-  try { rows = parseCSV(req.file.buffer); }
+  try { rows = parseCSV(fs.readFileSync(req.file.path, 'utf-8')); }
   catch (err) { return res.status(400).json({ error: `CSV parse error: ${err.message}` }); }
 
   const orderMap = new Map();
