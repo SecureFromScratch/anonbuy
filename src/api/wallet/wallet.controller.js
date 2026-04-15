@@ -19,26 +19,27 @@ export async function balance(req, res) {
 }
 
 export async function withdraw(req, res) {
-  const { from, to } = req.body;
-  if (!from || !to) {
-      res.status(400).json({ error: "Not valid wallets"});
-  }
-  if (from === to) {
-      res.status(400).json({ error: "Cannot withdraw from same wallet"});
-  }
+    const { from, to } = req.body;
 
-  try {
-    const wallet = await svc.transferAll({ from, to });
-    res.status(200).json({
-      balance: parseInt(wallet.balance)
-    });
-  }
-  catch (err) {
-    if (err instanceof BusinessError) {
-      res.status(400).json({ message: err.message });
+    if (!from || !to) {
+        return res.status(400).json({ error: "Not valid wallets" });
     }
-    else {
-      throw err;
+
+    if (from === to) {
+        return res.status(400).json({ error: "Cannot withdraw from same wallet" });
     }
-  }
+
+    try {
+        const wallet = await svc.transferAll({ from, to });
+
+        return res.status(200).json({
+            balance: parseInt(wallet.balance, 10),
+        });
+    } catch (err) {
+        if (err instanceof BusinessError) {
+            return res.status(400).json({ message: err.message });
+        }
+
+        throw err;
+    }
 }

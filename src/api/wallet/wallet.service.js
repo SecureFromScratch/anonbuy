@@ -7,28 +7,37 @@ export async function getWallet({ code }) {
 }
 
 export async function transferAll({ from, to }) {
-   //return solution.transferAll({ from, to });
-   return prisma.$transaction(async (tx) => {
-      const fromWallet = await prisma.wallet.findUnique({ where: { code: from } });
-      if (!fromWallet) {
-         throw new BusinessError("Wallet to withdraw from not found");
-      }
+    return prisma.$transaction(
+        async (tx) => {
+            const fromWallet = await tx.wallet.findUnique({
+                where: { code: from },
+            });
 
-      const transferAmount = fromWallet.balance;
-      if (transferAmount <= 0) {
-         throw new BusinessError("Wallet to withdraw from doesn't have any funds");
-      }
+            if (!fromWallet) {
+                throw new BusinessError("Wallet to withdraw from not found");
+            }
 
-      const result = await prisma.wallet.update({
-         where: { code: to },
-         data: { balance: { increment: transferAmount } },
-      });
+            const transferAmount = fromWallet.balance;
 
-      await tx.wallet.update({
-         where: { code: from },
-         data: { balance: { decrement: transferAmount } },
-      });
+            if (transferAmount <= 0) {
+                throw new BusinessError("Wallet to withdraw from doesn't have any funds");
+            }
 
-      return result;
-   });
+            const result = await tx.wallet.update({
+                where: { code: to },
+                data: { balance: { increment: transferAmount } },
+            });
+
+            await tx.wallet.update({
+                where: { code: from },
+                data: { balance: { decrement: transferAmount } },
+            });
+
+            return result;
+        },
+        {
+            maxWait: 10000,
+            timeout: 10000,
+        }
+    );
 }
