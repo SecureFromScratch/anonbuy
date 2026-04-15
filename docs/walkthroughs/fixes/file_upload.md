@@ -46,40 +46,35 @@ export const upload = multer({
 
 ### The Fix
 
-**Add strict file type validation with magic bytes:**
+**Add strict file type validation with content inspection, but keep disk storage so the rest of the bulk-order flow still works:**
 
 ```js
 // src/api/orders/bulk-orders-server.js
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import { parse } from 'csv-parse/sync';
 
-// Magic bytes for common malicious files we want to block
 const FORBIDDEN_SIGNATURES = {
-  // HTML: <!DOCTYPE or <html
   html: [
-    Buffer.from([0x3C, 0x21, 0x44, 0x4F, 0x43, 0x54, 0x59, 0x50, 0x45]), // <!DOCTYPE
-    Buffer.from([0x3C, 0x68, 0x74, 0x6D, 0x6C]),                         // <html
-    Buffer.from([0x3C, 0x48, 0x54, 0x4D, 0x4C]),                         // <HTML
+    Buffer.from([0x3C, 0x21, 0x44, 0x4F, 0x43, 0x54, 0x59, 0x50, 0x45]),
+    Buffer.from([0x3C, 0x68, 0x74, 0x6D, 0x6C]),
+    Buffer.from([0x3C, 0x48, 0x54, 0x4D, 0x4C]),
   ],
-  // JavaScript/Script tags
   script: [
-    Buffer.from([0x3C, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74]),           // <script
+    Buffer.from([0x3C, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74]),
   ],
-  // Executables
   exe: [
-    Buffer.from([0x4D, 0x5A]),                                          // MZ (Windows PE)
-    Buffer.from([0x7F, 0x45, 0x4C, 0x46]),                             // ELF (Linux)
+    Buffer.from([0x4D, 0x5A]),
+    Buffer.from([0x7F, 0x45, 0x4C, 0x46]),
   ],
-  // PHP
   php: [
-    Buffer.from([0x3C, 0x3F, 0x70, 0x68, 0x70]),                       // <?php
+    Buffer.from([0x3C, 0x3F, 0x70, 0x68, 0x70]),
   ],
 };
 
 function checkMagicBytes(buffer) {
-  // Check if file starts with any forbidden signature
   for (const [type, signatures] of Object.entries(FORBIDDEN_SIGNATURES)) {
     for (const signature of signatures) {
       if (buffer.slice(0, signature.length).equals(signature)) {
@@ -87,116 +82,120 @@ function checkMagicBytes(buffer) {
       }
     }
   }
-  
-  // CSV has NO magic bytes (it's plain text)
-  // So we validate by actually parsing the entire file
+
   try {
-    const rows = parse(buffer, {
-      columns: true,              // First row is header
+    const rows = parse(buffer.toString('utf8'), {
+      columns: true,
       skip_empty_lines: true,
       trim: true,
-      relax_column_count: false,  // All rows must have same # columns
-      relax_quotes: false,        // Quotes must be properly closed
-      max_record_size: 100000,    // Max 100KB per row
+      relax_column_count: false,
+      relax_quotes: false,
+      max_record_size: 100000,
     });
-    
-    // Must have at least 1 data row
+
     if (rows.length < 1) {
       return { malicious: true, type: 'empty-csv' };
     }
-    
-    // Check for required columns
+
     const requiredColumns = ['walletCode', 'itemId', 'quantity'];
     const headers = Object.keys(rows[0] || {});
     const missing = requiredColumns.filter(c => !headers.includes(c));
-    
+
     if (missing.length > 0) {
       return { malicious: true, type: `missing-columns-${missing.join('-')}` };
     }
-    
-    // Scan for suspicious patterns
+
     const csvText = buffer.toString('utf8');
     const suspicious = ['<script', 'eval(', '<?php', 'document.cookie'];
-    
+
     for (const pattern of suspicious) {
       if (csvText.toLowerCase().includes(pattern.toLowerCase())) {
         return { malicious: true, type: `suspicious-${pattern}` };
       }
     }
-    
-    return { malicious: false, rows };
-    
+
+    return { malicious: false };
   } catch (err) {
     return { malicious: true, type: 'csv-parse-error' };
   }
 }
 
+const storage = multer.diskStorage({
+  destination: './uploads',
+  filename: (req, file, cb) => {
+    cb(null, `${crypto.randomUUID()}.csv`);
+  }
+});
+
 export const upload = multer({
-  storage: multer.memoryStorage(), // Use memory to check bytes before saving
+  storage,
   limits: { fileSize: 5 * 1024 * 1024 },
-  
-  // ✅ SAFE - welcomelist extension (first line of defense)
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    
+
     if (ext !== '.csv') {
       return cb(new Error('Only CSV files allowed'));
     }
-    
+
     cb(null, true);
   }
 });
 
-// Add this middleware AFTER multer in your route
 export function validateFileContent(req, res, next) {
-  if (!req.file) return next();
-  
-  const check = checkMagicBytes(req.file.buffer);
-  
-  if (check.malicious) {
-    return res.status(400).json({ 
-      error: `Malicious file detected: ${check.type}`,
-      message: 'File content does not match CSV format'
-    });
+  if (!req.file) {
+    return next();
   }
-  
-  // Store parsed rows for efficiency (already parsed during validation)
-  res.locals.csvRows = check.rows;
-  
-  next();
+
+  try {
+    const buffer = fs.readFileSync(req.file.path);
+    const check = checkMagicBytes(buffer);
+
+    if (check.malicious) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({
+        error: `Malicious file detected: ${check.type}`,
+        message: 'File content does not match CSV format'
+      });
+    }
+
+    return next();
+  } catch (err) {
+    try {
+      if (req.file?.path) {
+        fs.unlinkSync(req.file.path);
+      }
+    } catch {}
+
+    return res.status(400).json({ error: 'File validation failed' });
+  }
 }
 ```
 
 **In your route:**
 
 ```js
-router.post('/bulk', 
+import { upload,  validateFileContent } from "./bulk-orders-server.js";
+
+router.post('/bulk',
   upload.single('file'),
-  validateFileContent,  // ← Parses + validates entire CSV
-  asyncHandler((req, res) => {
-    // Use pre-parsed rows from validation
-    const rows = res.locals.csvRows;
-    // ... process orders
-  })
+  validateFileContent,
+  asyncHandler(bulkOrders)
 );
 ```
 
 **Why this works:**
-- ✅ Checks actual file bytes for known malicious signatures (HTML, JS, EXE, PHP)
-- ✅ **Fully parses CSV** to validate structure (columns, format, data integrity)
-- ✅ Checks for required columns (`walletCode`, `itemId`, `quantity`)
-- ✅ Scans content for suspicious patterns (`<script`, `eval(`, `<?php`)
-- ✅ Can't be spoofed — validates the actual content, not metadata
-- ✅ Efficient — parses once during validation, reuses result in controller
+- ✅ Checks actual file content for known malicious signatures
+- ✅ Parses the CSV to make sure the structure is valid
+- ✅ Checks for required columns
+- ✅ Scans for suspicious patterns in the file body
+- ✅ Randomizes stored filenames instead of trusting `file.originalname`
+- ✅ Preserves `req.file.path`, so the existing bulk-order code keeps working
 
-**Why we parse the entire file:**
+**Why we keep disk storage here:**
 
-Text files like CSV have no magic bytes. The only way to know if something is truly a valid CSV is to:
-1. Try to parse it with a strict CSV parser
-2. Check it has the required columns
-3. Scan the content for malicious patterns
+This lab's bulk import path still reads the file from `req.file.path`. If we switch to `multer.memoryStorage()`, the file upload vulnerability may be fixed, but the bulk import endpoint will fail before it reaches the mass-assignment behavior. That would make the second lab appear fixed when it is really just broken.
 
-A malicious file could start with valid CSV rows but contain malicious content later. Full parsing catches this.
+So in this walkthrough we fix unrestricted file upload **without changing the contract used by the bulk-order flow**. We still validate the extension, inspect the actual content, delete malicious uploads, and randomize filenames, but we keep the upload available on disk for the rest of the code.
 
 **Test it:**
 ```bash
@@ -431,7 +430,7 @@ Without size limits, attackers can:
 ```js
 // ❌ VULNERABLE - no size limit
 export const upload = multer({
-  storage: multer.memoryStorage(),
+  storage,
   // No limits!
 });
 ```
@@ -456,7 +455,7 @@ Result: Server runs out of memory and crashes.
 
 ```js
 export const upload = multer({
-  storage: multer.memoryStorage(),
+  storage,
   limits: { 
     fileSize: 5 * 1024 * 1024,    // 5 MB max per file
     files: 1,                      // Only 1 file per request
@@ -473,7 +472,7 @@ export const upload = multer({
 
 **Choosing the right size:**
 - **Small CSV (thousands of rows):** 1-5 MB is plenty
-- **Large CSV (millions of rows):** Consider streaming instead of memory storage
+- **Large CSV (millions of rows):** Consider streaming validation and background processing
 - **Balance:** Large enough for legitimate use, small enough to prevent abuse
 
 **Add rate limiting:**
@@ -511,9 +510,8 @@ Putting it all together:
 import multer from 'multer';
 import crypto from 'crypto';
 import path from 'path';
-import fs from 'fs/promises';
+import fs from 'fs';
 
-// Magic byte validation
 const FORBIDDEN_SIGNATURES = {
   html: [
     Buffer.from([0x3C, 0x21, 0x44, 0x4F, 0x43, 0x54, 0x59, 0x50, 0x45]),
@@ -532,57 +530,69 @@ function checkMagicBytes(buffer) {
       }
     }
   }
-  
+
   const text = buffer.toString('utf8', 0, Math.min(1024, buffer.length));
   const lines = text.split('\n').filter(l => l.trim());
   if (lines.length < 2 || !lines[0].includes(',')) {
     return { malicious: true, type: 'invalid-csv' };
   }
-  
+
   return { malicious: false };
 }
 
+const storage = multer.diskStorage({
+  destination: './uploads',
+  filename: (req, file, cb) => {
+    cb(null, `${crypto.randomUUID()}.csv`);
+  }
+});
+
 export const upload = multer({
-  storage: multer.memoryStorage(),
+  storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if (ext !== '.csv') return cb(new Error('Only CSV files allowed'));
+    if (ext !== '.csv') {
+      return cb(new Error('Only CSV files allowed'));
+    }
     cb(null, true);
   }
 });
 
 export function validateFileContent(req, res, next) {
-  if (!req.file) return next();
-  
-  const check = checkMagicBytes(req.file.buffer);
-  if (check.malicious) {
-    return res.status(400).json({ 
-      error: `Malicious file: ${check.type}` 
-    });
+  if (!req.file) {
+    return next();
   }
-  next();
-}
 
-export async function saveSecurely(file) {
-  const random = crypto.randomBytes(16).toString('hex');
-  const filepath = path.join('./uploads', `${random}.csv`);
-  await fs.writeFile(filepath, file.buffer);
-  return { filename: `${random}.csv`, path: filepath };
+  try {
+    const buffer = fs.readFileSync(req.file.path);
+    const check = checkMagicBytes(buffer);
+    if (check.malicious) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({
+        error: `Malicious file: ${check.type}`
+      });
+    }
+    return next();
+  } catch (err) {
+    try {
+      if (req.file?.path) {
+        fs.unlinkSync(req.file.path);
+      }
+    } catch {}
+    return res.status(400).json({ error: 'File validation failed' });
+  }
 }
 ```
 
 ```js
 // orders.route.js
-import { upload, validateFileContent, saveSecurely } from './bulk-orders-server.js';
+import { upload, validateFileContent } from './bulk-orders-server.js';
 
 router.post('/bulk',
   upload.single('file'),
-  validateFileContent,  // Check magic bytes
-  asyncHandler(async (req, res) => {
-    const { filename } = await saveSecurely(req.file);
-    // ... rest of processing
-  })
+  validateFileContent,
+  asyncHandler(bulkOrders)
 );
 ```
 
