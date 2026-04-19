@@ -25,6 +25,9 @@ Run the entire lab **without any local dependencies**.
 
 * Open **PORTS** tab
 * Ensure port **3000** is **Public**
+  ```
+  gh codespace ports visibility 3000:public -c CODESPACE-NAME
+  ```
 * Click the 🌐 icon to open the app in the browser
 * Enter Wallet code "demo" and click "connect"
 
