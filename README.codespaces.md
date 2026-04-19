@@ -24,7 +24,7 @@ Run the entire lab **without any local dependencies**.
 ### Accessing the App
 
 * Open **PORTS** tab
-* Ensure port **3000** is **Public**
+* Ensure port **3000** is **Public**, if it's not run the following command in the terminal:
   ```
   gh codespace ports visibility 3000:public -c CODESPACE-NAME
   ```
